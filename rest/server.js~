@@ -1,3 +1,4 @@
+var cors = require('cors');
 var express = require('express');
 var fs = require("fs");
 var bodyParser = require('body-parser');
@@ -19,6 +20,7 @@ MongoClient.connect(url, function(err, db) {
    	dao = new Dao(db);
 });
 
+app.use(cors());
 
 app.post('/addUser', bodyParser.json(), function (req, res) {
    dao.addUser(req.body, function(doc){
@@ -68,14 +70,7 @@ app.get('/mapReduce', function (req, res) {
    });
 });
 
-app.post('/api/photo',function(req,res){
-    upload(req,res,function(err) {
-        if(err) {
-            return res.end("Error uploading file.");
-        }
-        res.end("File is uploaded");
-    });
-});
+var arrItens = [];
 
 app.post('/upload', upload.single('file'), function (req, res) {
    var data = [];
@@ -96,14 +91,19 @@ app.post('/upload', upload.single('file'), function (req, res) {
 		var arrDate = arrObj[0].trim().split('/');
 		var arrHour = arrObj[1].trim().split(':');
 		var itemContb = {
+			id:undefined,
 			data:new Date(anoAtual,arrDate[1],arrDate[0],arrHour[0],arrHour[1],0,0),
 			tipo:arrItem[0].trim(), 				
-			descricao:arrObj[2]
+			descricao:arrObj[2],
+			valor:parseFloat(item[5])
 		};
 		itemContb.tipo = (itemContb.tipo.indexOf('Saque') > -1 || 
 				  itemContb.tipo.indexOf('Banco 24') > -1)?'SAQUE':
 				  (itemContb.tipo.indexOf('Compra') > -1)?'COMPRA':itemContb.tipo;
-		console.log(itemContb);
+				
+		itemContb.id = (itemContb.data.getTime() / 1000) + 
+			(itemContb.valor.toString().replace('.',''));		
+		arrItens.push(itemContb);
             }		
 	});	
 	
@@ -113,6 +113,10 @@ app.post('/upload', upload.single('file'), function (req, res) {
         console.log(err.stack);
 	res.end('Ocorreu um erro inesperado.');
    });
+});
+
+app.get('/gastos', function (req, res) {
+   res.end(JSON.stringify(arrItens));
 });
 
 var server = app.listen(8181, function () {
