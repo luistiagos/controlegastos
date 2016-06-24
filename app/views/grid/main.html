@@ -1,0 +1,7 @@
+<div>
+	<input type="checkbox" ng-model="agrupado">Agrupado</input>
+</div>
+<div ui-grid="gridOptions" ng-show="agrupado" ui-grid-pinning ui-grid-expandable class="grid"></div>
+<div ui-grid="gridAllOptions" ng-show="!agrupado" ui-grid-pinning class="grid"></div>
+<br>
+Total:{{total}}
